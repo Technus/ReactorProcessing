@@ -1,6 +1,8 @@
 # ReactorProcessing
 Wrapped some processing API in reactive streams
 
+So it needs project reactor!
+
 Requires jars from:
 
 processing-#.#.#\core\library
