@@ -3,6 +3,7 @@ package com.github.technus.processingReactor;
 import com.github.technus.processingReactor.objects.Sphere;
 import com.github.technus.processingReactor.reactive.ReactiveListener;
 import com.github.technus.processingReactor.reactive.SynchronousExecutor;
+import com.github.technus.processingReactor.reactive.draw.DrawingStage;
 import com.github.technus.processingReactor.reactive.draw.Handler2DSharp;
 import com.github.technus.processingReactor.reactive.draw.Handler3D;
 import com.github.technus.processingReactor.reactive.draw.ScreenLayerHandler;
@@ -98,10 +99,12 @@ public class MainProcessing extends PApplet {
         if (DEBUG) {
             PrimitiveIterator.OfInt ints = ThreadLocalRandom.current().ints(-500, 500 + 1).iterator();
 
-            Handler3D spheres = new Handler3D(noOperation(),g-> {
-                g.sphereDetail(8);
-                g.noStroke();
-                g.lights();
+            Handler3D spheres = new Handler3D(noOperation(),(graphics3D,drawingStage)-> {
+                if (drawingStage == DrawingStage.PostBegin) {
+                    graphics3D.sphereDetail(8);
+                    graphics3D.noStroke();
+                    graphics3D.lights();
+                }
             },this,getSizeFlux().blockFirst());
             getLayers().add(spheres);
             for (int i = 0; i < 1000; i++) {

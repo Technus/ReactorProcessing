@@ -1,5 +1,6 @@
 package com.github.technus.processingReactor;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -10,6 +11,9 @@ public class Utility {
     private static final Function NO_OPERATION = o -> o;
     @SuppressWarnings("rawtypes")
     private static final Consumer NO_USE = o -> {};
+    @SuppressWarnings("rawtypes")
+    private static final BiConsumer NO_USE_OF_TWO = (o,t) -> {};
+
     public static boolean DEBUG = isDebug();
 
     private Utility() {
@@ -27,5 +31,9 @@ public class Utility {
     @SuppressWarnings("unchecked")
     public static <T> Consumer<T> noAction(){
         return (Consumer<T>) NO_USE;
+    }
+    @SuppressWarnings("unchecked")
+    public static <T,TT> BiConsumer<T,TT> noActionOnBoth(){
+        return (BiConsumer<T,TT>) NO_USE_OF_TWO;
     }
 }
