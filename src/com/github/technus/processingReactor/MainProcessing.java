@@ -101,14 +101,12 @@ public class MainProcessing extends PApplet {
             Handler3D spheres = new Handler3D(noOperation(),g-> {
                 g.sphereDetail(8);
                 g.noStroke();
-                return g;
+                g.lights();
             },this,getSizeFlux().blockFirst());
             getLayers().add(spheres);
             for (int i = 0; i < 1000; i++) {
                 new Sphere(spheres, ints.next(), ints.next()).initialize(this);
             }
-            //if((t.getT2()&7)==0){
-            //}
             spheres.getFluxInvalidate().subscribe(ScreenLayerHandler::setInvalidated);
 
             Handler2DSharp fps = new Handler2DSharp(this);
@@ -142,7 +140,8 @@ public class MainProcessing extends PApplet {
                 .parallel()
                 .runOn(renderInvalidator)
                 .doOnNext(screenLayerHandler -> screenLayerHandler.nextInvalidate(resizeList,this))
-                .then().block();
+                .then()
+                .block();
         Flux.concat(Flux.fromIterable(layers))
                 .subscribe(screenLayerHandler -> screenLayerHandler.next(resizeList, this));
     }

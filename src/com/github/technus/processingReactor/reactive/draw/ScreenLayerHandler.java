@@ -5,22 +5,28 @@ import processing.core.PGraphics;
 import reactor.core.publisher.*;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class ScreenLayerHandler<T extends PGraphics> {
-    private final Flux<T> flux;
-    private final Flux<ScreenLayerHandler<T>> fluxInvalidate;
-    private final FluxSink<T> sink;
-    private final FluxSink<ScreenLayerHandler<T>> sinkInvalidate;
-    private final Function<List<Integer>,T> supplier;
-    private T graphics;
+public abstract class ScreenLayerHandler<Graphics extends PGraphics> {
+    private final Flux<Graphics> flux;
+    private final Flux<ScreenLayerHandler<Graphics>> fluxInvalidate;
+    private final FluxSink<Graphics> sink;
+    private final FluxSink<ScreenLayerHandler<Graphics>> sinkInvalidate;
+    private final Function<List<Integer>, Graphics> graphicsSupplier;
+    private final Consumer<Graphics> graphicsPreparer;
+    private Graphics graphics;
     private volatile boolean invalidated=true;
 
-    public ScreenLayerHandler(Function<Flux<ScreenLayerHandler<T>>, Flux<ScreenLayerHandler<T>>> chain, Function<List<Integer>, T> supplier, List<Integer> initialSize) {
-        this.supplier = supplier;
-        graphics=this.supplier.apply(initialSize);
-        FluxProcessor<T,T> processor= DirectProcessor.create();
-        FluxProcessor<ScreenLayerHandler<T>,ScreenLayerHandler<T>> processorInvalidate=EmitterProcessor.create(1);
+    public ScreenLayerHandler(Function<Flux<ScreenLayerHandler<Graphics>>, Flux<ScreenLayerHandler<Graphics>>> chain,
+                              Function<List<Integer>, Graphics> graphicsSupplier,
+                              Consumer<Graphics> graphicsPreparer,
+                              List<Integer> initialSize) {
+        this.graphicsSupplier = graphicsSupplier;
+        this.graphicsPreparer = graphicsPreparer;
+        graphics=this.graphicsSupplier.apply(initialSize);
+        FluxProcessor<Graphics, Graphics> processor= DirectProcessor.create();
+        FluxProcessor<ScreenLayerHandler<Graphics>,ScreenLayerHandler<Graphics>> processorInvalidate=EmitterProcessor.create(1);
         sink=processor.sink(FluxSink.OverflowStrategy.DROP);
         sinkInvalidate=processorInvalidate.sink(FluxSink.OverflowStrategy.DROP);
         flux = processor.share();
@@ -35,11 +41,11 @@ public abstract class ScreenLayerHandler<T extends PGraphics> {
         return invalidated;
     }
 
-    public final Flux<T> getFlux() {
+    public final Flux<Graphics> getFlux() {
         return flux;
     }
 
-    public final Flux<ScreenLayerHandler<T>> getFluxInvalidate() {
+    public final Flux<ScreenLayerHandler<Graphics>> getFluxInvalidate() {
         return fluxInvalidate;
     }
 
@@ -53,13 +59,15 @@ public abstract class ScreenLayerHandler<T extends PGraphics> {
         if(resizeList.get(0)!=graphics.width || resizeList.get(1)!=graphics.height){
             invalidated=true;
             graphics.dispose();
-            graphics = supplier.apply(resizeList);
+            graphics = graphicsSupplier.apply(resizeList);
             graphics.beginDraw();
+            graphicsPreparer.accept(graphics);
             sink.next(graphics);
             graphics.endDraw();
             invalidated=false;
         }else if(invalidated){
             graphics.beginDraw();
+            graphicsPreparer.accept(graphics);
             graphics.clear();
             sink.next(graphics);
             graphics.endDraw();
