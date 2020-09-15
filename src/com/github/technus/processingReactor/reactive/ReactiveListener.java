@@ -7,21 +7,21 @@ import reactor.core.publisher.FluxSink;
 
 import java.util.function.Function;
 
-public class ReactiveListener<T> {
-    private final Flux<T> flux;
-    private final FluxSink<T> sink;
+public class ReactiveListener<Anything> {
+    private final Flux<Anything> flux;
+    private final FluxSink<Anything> sink;
 
-    public ReactiveListener(Function<Flux<T>,Flux<T>> chain) {
-        FluxProcessor<T,T> processor= EmitterProcessor.create(1);
+    public ReactiveListener(Function<Flux<Anything>,Flux<Anything>> chain) {
+        FluxProcessor<Anything, Anything> processor= EmitterProcessor.create(1);
         sink=processor.sink(FluxSink.OverflowStrategy.DROP);
         flux = processor.transform(chain);
     }
 
-    public Flux<T> getFlux() {
+    public Flux<Anything> getFlux() {
         return flux;
     }
 
-    public FluxSink<T> getSink() {
+    public FluxSink<Anything> getSink() {
         return sink;
     }
 }

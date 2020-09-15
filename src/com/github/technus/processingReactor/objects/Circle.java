@@ -33,7 +33,7 @@ public class Circle extends ProcessingObjectBase {
                 y=ints.get(1)+oy;
                 if(x<app.width+EXTENT && x>-EXTENT && y>-EXTENT && y<app.height+EXTENT) {
                     if(disposable==null) {
-                        disposable = layer.getFlux().subscribe(layer->layer.circle(x, y, EXTENT));
+                        disposable = layer.getFluxDraw().subscribe(layer->layer.circle(x, y, EXTENT));
                     }
                 }else if(disposable!=null){
                     disposable.dispose();

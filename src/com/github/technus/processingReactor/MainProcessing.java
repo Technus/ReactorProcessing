@@ -1,15 +1,16 @@
 package com.github.technus.processingReactor;
 
+import com.github.technus.processingReactor.objects.Circle;
 import com.github.technus.processingReactor.objects.Sphere;
 import com.github.technus.processingReactor.reactive.ReactiveListener;
 import com.github.technus.processingReactor.reactive.SynchronousExecutor;
-import com.github.technus.processingReactor.reactive.draw.DrawingStage;
 import com.github.technus.processingReactor.reactive.draw.Handler2DSharp;
 import com.github.technus.processingReactor.reactive.draw.Handler3D;
 import com.github.technus.processingReactor.reactive.draw.ScreenLayerHandler;
 import processing.core.PApplet;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
+import processing.opengl.PGraphicsOpenGL;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -19,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.github.technus.processingReactor.Utility.DEBUG;
+import static com.github.technus.processingReactor.Utility.isDebug;
 import static com.github.technus.processingReactor.Utility.noOperation;
 
 /**
@@ -96,16 +97,18 @@ public class MainProcessing extends PApplet {
     public void setup() {
         getSurface().setResizable(true);
 
-        if (DEBUG) {
+        if (isDebug()) {
             PrimitiveIterator.OfInt ints = ThreadLocalRandom.current().ints(-500, 500 + 1).iterator();
 
-            Handler3D spheres = new Handler3D(noOperation(),(graphics3D,drawingStage)-> {
-                if (drawingStage == DrawingStage.PostBegin) {
-                    graphics3D.sphereDetail(8);
-                    graphics3D.noStroke();
-                    graphics3D.lights();
-                }
-            },this,getSizeFlux().blockFirst());
+
+            Handler3D spheres = new Handler3D(noOperation(),this);
+            spheres.setGraphicsPostBeginInitialize(graphics3D-> {
+                graphics3D.sphereDetail(8);
+                graphics3D.noStroke();
+            });
+            spheres.setGraphicsPostBegin(PGraphicsOpenGL::lights);
+            spheres.initializeGraphics(getSizeFlux().blockFirst());
+
             getLayers().add(spheres);
             for (int i = 0; i < 1000; i++) {
                 new Sphere(spheres, ints.next(), ints.next()).initialize(this);
@@ -113,11 +116,12 @@ public class MainProcessing extends PApplet {
             spheres.getFluxInvalidate().subscribe(ScreenLayerHandler::setInvalidated);
 
             Handler2DSharp fps = new Handler2DSharp(this);
+            fps.initializeGraphics(getSizeFlux().blockFirst());
             getLayers().add(fps);
-            //for (int i = 0; i < 1000; i++) {
-            //    new Circle(fps, ints.next(), ints.next()).initialize(this);
-            //}
-            fps.getFlux().subscribe(aLong -> aLong.text(frameRate, 0, 20));
+            for (int i = 0; i < 1000; i++) {
+                new Circle(fps, ints.next(), ints.next()).initialize(this);
+            }
+            fps.getFluxDraw().subscribe(aLong -> aLong.text(frameRate, 0, 20));
             fps.getFluxInvalidate().subscribe(ScreenLayerHandler::setInvalidated);
         }
 
@@ -146,11 +150,12 @@ public class MainProcessing extends PApplet {
                 .then()
                 .block();
         Flux.concat(Flux.fromIterable(layers))
-                .subscribe(screenLayerHandler -> screenLayerHandler.next(resizeList, this));
+                .subscribe(screenLayerHandler -> screenLayerHandler.nextDraw(resizeList, this));
     }
 
     @Override
     protected void handleMouseEvent(MouseEvent event) {
+        //debug event mutator not needed
         super.handleMouseEvent(event);
         mouse.getSink().next(event);
         if (MouseEvent.EXIT == event.getAction()) {
@@ -169,7 +174,7 @@ public class MainProcessing extends PApplet {
 
     @Override
     protected void handleKeyEvent(KeyEvent event) {
-        if (DEBUG) {
+        if (isDebug()) {
             event = new KeyEvent(event.getNative(), event.getMillis(), event.getAction(),
                     event.getModifiers(), event.getKey(), event.getKeyCode(), event.isAutoRepeat()) {
 

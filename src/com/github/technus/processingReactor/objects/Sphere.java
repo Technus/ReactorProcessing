@@ -35,7 +35,7 @@ public class Sphere extends ProcessingObjectBase {
                     y = ints.get(1) + oy;
                     if (x < app.width + EXTENT && x > -EXTENT && y > -EXTENT && y < app.height + EXTENT) {
                         if (disposable == null) {
-                            disposable = layer.getFlux().subscribe(layer -> {
+                            disposable = layer.getFluxDraw().subscribe(layer -> {
                                 layer.pushMatrix();
                                 layer.translate(x, y);
                                 layer.sphere(EXTENT);

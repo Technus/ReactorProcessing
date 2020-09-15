@@ -14,8 +14,6 @@ public class Utility {
     @SuppressWarnings("rawtypes")
     private static final BiConsumer NO_USE_OF_TWO = (o,t) -> {};
 
-    public static boolean DEBUG = isDebug();
-
     private Utility() {
     }
 
