@@ -1,16 +1,11 @@
 package com.github.technus.processingReactor;
 
-import com.github.technus.processingReactor.objects.Circle;
-import com.github.technus.processingReactor.objects.Sphere;
 import com.github.technus.processingReactor.reactive.ReactiveListener;
 import com.github.technus.processingReactor.reactive.SynchronousExecutor;
-import com.github.technus.processingReactor.reactive.draw.Handler2DSharp;
-import com.github.technus.processingReactor.reactive.draw.Handler3D;
 import com.github.technus.processingReactor.reactive.draw.ScreenLayerHandler;
 import processing.core.PApplet;
 import processing.event.KeyEvent;
 import processing.event.MouseEvent;
-import processing.opengl.PGraphicsOpenGL;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -18,10 +13,6 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
-
-import static com.github.technus.processingReactor.Utility.isDebug;
-import static com.github.technus.processingReactor.Utility.noOperation;
 
 /**
  * Created by Tec on 10.04.2017.
@@ -148,29 +139,6 @@ public class MainProcessing extends PApplet {
 
     @Override
     protected void handleKeyEvent(KeyEvent event) {
-        if (isDebug()) {
-            event = new KeyEvent(event.getNative(), event.getMillis(), event.getAction(),
-                    event.getModifiers(), event.getKey(), event.getKeyCode(), event.isAutoRepeat()) {
-
-                private String actionString() {
-                    switch (this.action) {
-                        case 1:
-                            return "PRESS";
-                        case 2:
-                            return "RELEASE";
-                        case 3:
-                            return "TYPE";
-                        default:
-                            return "UNKNOWN";
-                    }
-                }
-
-                @Override
-                public String toString() {
-                    return String.format("<KeyEvent %s@%s,%d modifiers:%d repeating:%s>", this.actionString(), this.getKey(), this.getKeyCode(), this.getModifiers(), this.isAutoRepeat());
-                }
-            };
-        }
         super.handleKeyEvent(event);
         keyboard.getSink().next(event);
         if (!event.isAutoRepeat()) {
