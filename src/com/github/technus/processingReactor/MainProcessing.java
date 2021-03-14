@@ -91,39 +91,13 @@ public class MainProcessing extends PApplet {
         sizeList.add(480);
         size(sizeList.get(0), sizeList.get(1), P3D);
         size.getSink().next(sizeListU);
+
+        mousePosition.getSink().next(Optional.empty());
     }
 
     @Override
     public void setup() {
         getSurface().setResizable(true);
-
-        if (isDebug()) {
-            PrimitiveIterator.OfInt ints = ThreadLocalRandom.current().ints(-500, 500 + 1).iterator();
-
-
-            Handler3D spheres = new Handler3D(noOperation(),this);
-            spheres.setGraphicsPostBeginInitialize(graphics3D-> {
-                graphics3D.sphereDetail(8);
-                graphics3D.noStroke();
-            });
-            spheres.setGraphicsPostBegin(PGraphicsOpenGL::lights);
-            spheres.initializeGraphics(getSizeFlux().blockFirst());
-
-            getLayers().add(spheres);
-            for (int i = 0; i < 1000; i++) {
-                new Sphere(spheres, ints.next(), ints.next()).initialize(this);
-            }
-            spheres.getFluxInvalidate().subscribe(ScreenLayerHandler::setInvalidated);
-
-            Handler2DSharp fps = new Handler2DSharp(this);
-            fps.initializeGraphics(getSizeFlux().blockFirst());
-            getLayers().add(fps);
-            for (int i = 0; i < 1000; i++) {
-                new Circle(fps, ints.next(), ints.next()).initialize(this);
-            }
-            fps.getFluxDraw().subscribe(aLong -> aLong.text(frameRate, 0, 20));
-            fps.getFluxInvalidate().subscribe(ScreenLayerHandler::setInvalidated);
-        }
 
         background(0);
 
